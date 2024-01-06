@@ -1,4 +1,4 @@
-import mysql2 from "mysql2";
+import mysql2 from "mysql2/promise";
 
 const db = mysql2.createPool({
     host: "localhost",
@@ -7,3 +7,5 @@ const db = mysql2.createPool({
     password: "password",
     database: "technique"
 });
+
+export default db;

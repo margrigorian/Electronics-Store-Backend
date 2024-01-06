@@ -1,18 +1,17 @@
 import z from "zod";
 import responseTemplate from "../lib/responseTemplate.js";
 
-export async function validate(action) {
+export function validate(action) {
     return (req, res, next) => {
 
         const schemas = {
-            registartion: z.object({
-                username: z.string.min(1),
-                email: z.email(),
-                phone: z.number().min(11),
-                password: z.string.min(5)
+            registration: z.object({
+                username: z.string().min(1),
+                email: z.string().email(),
+                password: z.string().min(5)
             }),
             authorization: z.object({
-                emailOrPhone: z.email() || z.number.min(11),
+                email: z.string().email(),
                 password: z.string().min(5)
             }),
         }
@@ -28,7 +27,6 @@ export async function validate(action) {
         response.error = {
             message
         };
-        res.status(406).json(response);
-        return;
+        return res.status(406).json(response);
     }
 }
