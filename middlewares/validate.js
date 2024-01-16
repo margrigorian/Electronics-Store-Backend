@@ -13,10 +13,11 @@ export function validate(action) {
             authorization: z.object({
                 email: z.string().email(),
                 password: z.string().min(5)
-            }),
+            })
         }
 
-        const validatedData = schemas[action].safeParse(req.body);
+        validatedData = schemas[action].safeParse(req.body);
+
         if(validatedData.success) {
             next();
             return;
