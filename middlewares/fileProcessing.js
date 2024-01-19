@@ -5,7 +5,7 @@ const storage = multer.diskStorage({
         cb(null, "images") // вторым параметром передается путь к папке, где будут храниться файлы
     },
     filename: function (req, file, cb) {
-        cb(null, new Date().toISOString() + "-" + file.originalname) // задаем имя файла
+        cb(null, Date.now() + "-" + file.originalname) // задаем имя файла
     }
 })
 

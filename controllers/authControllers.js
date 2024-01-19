@@ -1,10 +1,10 @@
-import responseTemplate from "../lib/responseTemplate.js";
+import getResponseTemplate from "../lib/responseTemplate.js";
 import { checkUser, addNewUser, getToken } from "../servicing/authService.js";
 
 export async function userRegistrationController(req, res) {
     try{
         let message;
-        const response = responseTemplate;
+        const response = getResponseTemplate();
 
         const {username, email, password} = req.body;
         const user = await checkUser(email, password);
@@ -26,7 +26,7 @@ export async function userRegistrationController(req, res) {
         return res.status(406).json(response);
     }catch(err) {
         const message = "500 Server Error";
-        const response = responseTemplate;
+        const response = getResponseTemplate();
         response.error = {
             message
         };
@@ -37,7 +37,7 @@ export async function userRegistrationController(req, res) {
 export async function userLoginController(req, res) {
     try{
         let message;
-        const response = responseTemplate;
+        const response = getResponseTemplate();
 
         const {email, password} = req.body;
         const user = await checkUser(email, password);
@@ -59,7 +59,7 @@ export async function userLoginController(req, res) {
         return res.status(406).json(response);
     }catch(err) {
         const message = "500 Server Error";
-        const response = responseTemplate;
+        const response = getResponseTemplate();
         response.error = {
             message
         };

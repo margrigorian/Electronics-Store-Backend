@@ -1,5 +1,5 @@
 import { checkToken } from "../servicing/authService.js";
-import responseTemplate from "../lib/responseTemplate.js";
+import getResponseTemplate from "../lib/responseTemplate.js";
 
 export function authenticate(access = false) {
     return async (req, res, next) => {
@@ -39,7 +39,7 @@ export function authenticate(access = false) {
             return res.status(401).json(response);
         }catch(err) {
             const message = "500 Server Error";
-            const response = responseTemplate;
+            const response = getResponseTemplate();
             response.error = {
                 message
             }
