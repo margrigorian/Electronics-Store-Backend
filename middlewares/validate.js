@@ -24,6 +24,12 @@ export function validate(action) {
                 page: z.preprocess((a) => a === "" ? a : parseInt(String(a), 10), z.union([z.number().positive(), z.literal("")])).optional(z.undefined()),
                 limit: z.preprocess((a) => a === "" ? a : parseInt(String(a), 10), z.union([z.number().positive(), z.literal("")])).optional(z.undefined())
                 // лишние query-параметры не препятсвуют запросу
+            }),
+            searchQueries: z.object({
+                q: z.string().min(1),
+                subcategory: z.union([z.string(), z.literal(""), z.undefined()]),
+                page: z.preprocess((a) => a === "" ? a : parseInt(String(a), 10), z.union([z.number().positive(), z.literal("")])).optional(z.undefined()),
+                limit: z.preprocess((a) => a === "" ? a : parseInt(String(a), 10), z.union([z.number().positive(), z.literal("")])).optional(z.undefined())
             })
         }
 
