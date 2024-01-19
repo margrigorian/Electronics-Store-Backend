@@ -126,3 +126,18 @@ export async function getProductList(search, category, subcategory, minPrice, ma
         length: products[0].length
     }
 }
+
+export async function getProduct(id) {
+    const data = await db.query(`SELECT * FROM products WHERE id = "${id}"`);
+    const rating = await db.query(`SELECT AVG(rate) AS rate FROM product_rating WHERE product_id = "${id}"`);
+    const comments = await db.query(`SELECT comment FROM product_comments WHERE product_id = "${id}"`);
+    const product = {... data[0][0], rating: rating[0][0].rate, comments: comments[0]};
+
+    if(data[0][0]) { // товар с указанным id найден
+        return {
+            product
+        };
+    }else {
+        return null;
+    }
+}
