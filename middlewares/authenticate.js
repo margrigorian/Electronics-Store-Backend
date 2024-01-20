@@ -5,7 +5,7 @@ export function authenticate(access = false) {
     return async (req, res, next) => {
         try{
             let message;
-            const response = responseTemplate;
+            const response = getResponseTemplate();
 
             const bearer = req.headers.authorization || "";
             const token = bearer.split(" ")[1];

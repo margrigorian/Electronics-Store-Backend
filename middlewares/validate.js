@@ -3,7 +3,6 @@ import getResponseTemplate from "../lib/responseTemplate.js";
 
 export function validate(action) {
     return (req, res, next) => {
-        
         const schemas = {
             registration: z.object({
                 username: z.string().min(1),
@@ -30,6 +29,21 @@ export function validate(action) {
                 subcategory: z.union([z.string(), z.literal(""), z.undefined()]),
                 page: z.preprocess((a) => a === "" ? a : parseInt(String(a), 10), z.union([z.number().positive(), z.literal("")])).optional(z.undefined()),
                 limit: z.preprocess((a) => a === "" ? a : parseInt(String(a), 10), z.union([z.number().positive(), z.literal("")])).optional(z.undefined())
+            }),
+            post: z.object({
+                title: z.string().min(2),
+                description: z.string().min(2),
+                feildOfApplication: z.union([z.literal("smart-home"), z.literal("life-style")]),
+                category: z.union([
+                    z.literal("kitchen appliance"), z.literal("office"), z.literal("wearable")
+                ]),
+                subcategory: z.union([
+                    // все ли описывается?
+                    z.literal("kettle"), z.literal("laptop"), z.literal("tablet"), z.literal("monitor"), z.literal("router"),
+                    z.literal("watch"), z.literal("headphones"), z.literal("other")
+                ]),
+                quantity: z.preprocess((a) => parseInt(String(a), 10), z.number().nonnegative()), // допускается 0
+                price: z.preprocess((a) => parseInt(String(a), 10), z.number().positive()),
             })
         }
 
@@ -38,16 +52,21 @@ export function validate(action) {
         
         if(Object.keys(queryParams).length > 0) {
             validatedData = schemas[action].safeParse(queryParams);
+
+            const min = queryParams.minPrice;
+            const max = queryParams.maxPrice;
+
+            if(validatedData.success) {
+                // допускается undefined/"" и верное мат. сравнение
+                if(!min || !max || min < max) {
+                    next();
+                    return;
+                }
+            }
         }else {
             validatedData = schemas[action].safeParse(req.body);
-        }
 
-        const min = queryParams.minPrice;
-        const max = queryParams.maxPrice;
-
-        if(validatedData.success) {
-            // допускается undefined/"" и верное мат. сравнение
-            if(!min || !max || min < max) {
+            if(validatedData.success) {
                 next();
                 return;
             }

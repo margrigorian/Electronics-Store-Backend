@@ -14,7 +14,7 @@ export async function getFeildOfApplicationCategories(feildOfApplication) {
     // запрашиваем продукты указанных категорий, на выходе - массивы промисов
     let products_list = categories[0].map(async (el, i) => {
         const products = await db.query(
-            `SELECT id, title, picture, price FROM products WHERE category = "${el.category}" LIMIT 3`
+            `SELECT id, title, image, price FROM products WHERE category = "${el.category}" LIMIT 3`
         );
 
         return products[0];
@@ -32,7 +32,7 @@ export async function getFeildOfApplicationCategories(feildOfApplication) {
     // запрашиваем продукты указанной области применения
     // const products = await db.query(
     //     `
-    //         SELECT id, title, picture, category, price FROM products 
+    //         SELECT id, title, image, category, price FROM products 
     //         WHERE feildOfApplication = "${feildOfApplication}"
     //     `
     // );
@@ -111,7 +111,7 @@ export async function getProductList(search, category, subcategory, minPrice, ma
     
     const products = await db.query(
         `
-            SELECT id, title, picture, price, subcategory FROM products 
+            SELECT id, title, image, price, subcategory FROM products 
             WHERE ${filters.join(" AND ")}
             ${order ? `ORDER BY price ${order === "asc" ? "asc" : "desc"}` : ""}
             LIMIT ?, ?
@@ -140,4 +140,37 @@ export async function getProduct(id) {
     }else {
         return null;
     }
+}
+
+export async function checkProductExistence(title) {
+    const product = await db.query(`SELECT * FROM products WHERE title = ?`, [title]);
+
+    if(product[0][0]) {
+        return {
+            product: product[0][0]
+        }
+    }else {
+        return null;
+    }
+}
+
+export async function postProduct(title, description, image, feild, category, sub, quantity, price) {
+    const id = await getLastProductId() + 1;
+    
+    await db.query(
+        `
+            INSERT INTO products(id, title, description, image, feildOfApplication, category, subcategory, quantity, price) 
+            VALUES("${id}", ?, ?, "${image}", "${feild}", "${category}", "${sub}", "${quantity}", "${price}")
+        `,
+        [title, description]
+    )
+
+    const product = await getProduct(id);
+
+    return product;
+}
+
+async function getLastProductId() {
+    const lastId = await db.query('SELECT id FROM products ORDER BY id DESC LIMIT 1');
+    return lastId[0][0].id;
 }
