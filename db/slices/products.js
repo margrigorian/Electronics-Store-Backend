@@ -225,6 +225,16 @@ export async function updateProduct(id, title, description, image, feild, catego
     return product;
 }
 
+export async function deleteProduct(id) {
+    const product = await getProduct(id);
+
+    if(product) {
+        await db.query(`DELETE FROM products WHERE id = "${id}"`);
+    }
+
+    return product;
+}
+
 async function getLastProductId() {
     const lastId = await db.query('SELECT id FROM products ORDER BY id DESC LIMIT 1');
     return lastId[0][0].id;

@@ -20,11 +20,11 @@ export async function postProductController(req, res) {
             return res.status(201).json(response);
         }
 
-        const message = "The product already exists";
+        const message = "The product already exists. Change the product title";
         response.error = {
             message
         }
-        return res.status(406).json(response); // ошибка некорректных данных
+        return res.status(400).json(response); // ошибка некорректных данных
     }catch(err) {
         const message = "500 Server Error";
         const response = getResponseTemplate();

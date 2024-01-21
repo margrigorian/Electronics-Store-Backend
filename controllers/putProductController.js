@@ -25,7 +25,7 @@ export async function putProductController(req, res) {
         response.error = {
             message
         }
-        return res.status(406).json(response); // ошибка некорректных данных
+        return res.status(404).json(response); // ошибка некорректных данных
     }catch(err) {
         const message = "500 Server Error";
         const response = getResponseTemplate();

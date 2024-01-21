@@ -64,6 +64,9 @@ export function validate(action) {
                 ]),
                 quantity: z.preprocess((a) => a === "" ? a : parseInt(String(a), 10), z.union([z.number().nonnegative(), z.literal("")])).optional(z.undefined()),
                 price: z.preprocess((a) => a === "" ? a : parseInt(String(a), 10), z.union([z.number().positive(), z.literal("")])).optional(z.undefined())
+            }),
+            delete: z.object({
+                id: z.number().positive()
             })
         }
 
