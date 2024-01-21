@@ -44,6 +44,26 @@ export function validate(action) {
                 ]),
                 quantity: z.preprocess((a) => parseInt(String(a), 10), z.number().nonnegative()), // допускается 0
                 price: z.preprocess((a) => parseInt(String(a), 10), z.number().positive()),
+            }),
+            put: z.object({
+                id: z.preprocess((a) => parseInt(String(a), 10), z.number().positive()),
+                title: z.union([z.string().min(2), z.literal(""), z.undefined()]),
+                description: z.union([z.string().min(2), z.literal(""), z.undefined()]),
+                feildOfApplication: z.union([
+                    z.literal("smart-home"), z.literal("life-style"), 
+                    z.literal(""), z.undefined()
+                ]),
+                category: z.union([
+                    z.literal("kitchen appliance"), z.literal("office"), z.literal("wearable"), 
+                    z.literal(""), z.undefined()
+                ]),
+                subcategory: z.union([
+                    z.literal("kettle"), z.literal("laptop"), z.literal("tablet"), z.literal("monitor"), z.literal("router"),
+                    z.literal("watch"), z.literal("headphones"), z.literal("other"),
+                     z.literal(""), z.undefined()
+                ]),
+                quantity: z.preprocess((a) => a === "" ? a : parseInt(String(a), 10), z.union([z.number().nonnegative(), z.literal("")])).optional(z.undefined()),
+                price: z.preprocess((a) => a === "" ? a : parseInt(String(a), 10), z.union([z.number().positive(), z.literal("")])).optional(z.undefined())
             })
         }
 

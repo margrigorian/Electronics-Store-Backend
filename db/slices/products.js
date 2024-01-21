@@ -166,7 +166,62 @@ export async function postProduct(title, description, image, feild, category, su
     )
 
     const product = await getProduct(id);
+    return product;
+}
 
+export async function updateProduct(id, title, description, image, feild, category, sub, quantity, price) {
+    const filters = [];
+    const params = [];
+
+    if(title) {
+        filters.push("title = ?");
+        params.push(title);
+    }
+
+    if(description) {
+        filters.push("description = ?");
+        params.push(description);
+    }
+
+    if(image) {
+        filters.push("image = ?");
+        params.push(image);
+    }
+
+    if(feild) {
+        filters.push("feildOfApplication = ?");
+        params.push(feild);
+    }
+
+    if(category) {
+        filters.push("category = ?");
+        params.push(category);
+    }
+
+    if(sub) {
+        filters.push("subcategory = ?");
+        params.push(sub);
+    }
+
+    if(quantity) {
+        filters.push("quantity = ?");
+        params.push(quantity);
+    }
+
+    if(price) {
+        filters.push("price = ?");
+        params.push(price);
+    }
+
+    await db.query(
+        `
+            UPDATE products SET ${filters.join(",")}
+            WHERE id="${id}"
+        `,
+        params
+    );
+
+    const product = await getProduct(id);
     return product;
 }
 
