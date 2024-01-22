@@ -56,7 +56,7 @@ export function validate(action) {
             }),
             postComment: z.object({
                 productId: z.preprocess((a) => parseInt(String(a), 10), z.number().positive()), // проверка id из params
-                comment: z.string().min(2)
+                comment: z.string().min(2).optional(z.undefined())
             }),
             deleteComment: z.object({
                 commentId: z.number().positive() // отправлено через req.body

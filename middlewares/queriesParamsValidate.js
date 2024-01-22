@@ -32,13 +32,16 @@ export function queriesParamsValidate (action) {
                 ]),
                 page: z.preprocess((a) => a === "" ? a : parseInt(String(a), 10), z.union([z.number().positive(), z.literal("")])).optional(z.undefined()),
                 limit: z.preprocess((a) => a === "" ? a : parseInt(String(a), 10), z.union([z.number().positive(), z.literal("")])).optional(z.undefined())
+            }),
+            rateQuery: z.object({
+                rate: z.preprocess((a) => parseInt(String(a), 10), z.union([z.number().min(1).max(5)])).optional(z.undefined())
             })
         }
 
         let queryParams;
         const { category } = req.params;
         category ? queryParams = {...req.query, category} : queryParams = req.query;
-        
+
         const validatedData = schemas[action].safeParse(queryParams);
 
         const min = queryParams.minPrice;
