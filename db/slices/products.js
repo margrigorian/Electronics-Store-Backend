@@ -265,6 +265,18 @@ export async function deleteProduct(id) {
     return product;
 }
 
+export async function getComment(commentId) {
+    const comment = await db.query(`SELECT * FROM product_comments WHERE comment_id = "${commentId}"`);
+
+    if(comment) {
+        return {
+            comment: comment[0][0]
+        }
+    }
+
+    return null;
+}
+
 export async function postComment(productId, commentText, userId) {
     const product = await getProduct(productId);
 
@@ -289,6 +301,10 @@ export async function postComment(productId, commentText, userId) {
     }else {
         return null;
     }
+}
+
+export async function deleteComment(commentId) {
+    await db.query(`DELETE FROM product_comments WHERE comment_id = "${commentId}"`);
 }
 
 async function getLastProductId() {
