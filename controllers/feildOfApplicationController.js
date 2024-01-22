@@ -11,10 +11,19 @@ export async function feildOfApplicationController(req, res) {
         const data = await getFeildOfApplicationCategories(feildOfApplication[1]);
 
         const response = getResponseTemplate();
-        response.data = {
-            data
+
+        if(data) {
+            response.data = {
+                data
+            }
+            return res.status(200).json(response);
         }
-        res.status(200).json(response);
+
+        const message = "404 NOT FOUND"; // категории не найдены
+        response.error = {
+            message
+        }
+        return res.status(404).json(response);
     }catch(err) {
         const message = "500 Server Error";
         const response = getResponseTemplate();

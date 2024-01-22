@@ -9,22 +9,29 @@ export async function getFeildOfApplicationCategories(feildOfApplication) {
         `
     );
 
-    // В-I
+    if(categories[0].length > 0) {
 
-    // запрашиваем продукты указанных категорий, на выходе - массивы промисов
-    let products_list = categories[0].map(async (el, i) => {
-        const products = await db.query(
-            `SELECT id, title, image, price FROM products WHERE category = "${el.category}" LIMIT 3`
-        );
-
-        return products[0];
-    });
-
-    products_list = await Promise.all(products_list).then(list => list);
-
-    const result = categories[0].map((el, i) => {
-        return {category: el.category, products: products_list[i]}; // формируем необходимую структуру
-    });
+        // В-I
+    
+        // запрашиваем продукты указанных категорий, на выходе - массивы промисов
+        let products_list = categories[0].map(async (el, i) => {
+            const products = await db.query(
+                `SELECT id, title, image, price FROM products WHERE category = "${el.category}" LIMIT 3`
+            );
+    
+            return products[0];
+        });
+    
+        products_list = await Promise.all(products_list).then(list => list);
+    
+        const result = categories[0].map((el, i) => {
+            return {category: el.category, products: products_list[i]}; // формируем необходимую структуру
+        });
+    
+        return result;
+    }else {
+        return null;
+    }
 
 
     // В-II
@@ -52,8 +59,6 @@ export async function getFeildOfApplicationCategories(feildOfApplication) {
     // })
 
     // console.log(result[0]);
-
-    return result;
 }
 
 export async function getProductList(search, category, subcategory, minPrice, maxPrice, order, page, limit) {
@@ -119,21 +124,34 @@ export async function getProductList(search, category, subcategory, minPrice, ma
         params
     );
 
-    return {
-        products: products[0],  
-        priceMin : priceValues[0][0].min,
-        priceMax : priceValues[0][0].max,
-        length: products[0].length
+    if(products[0].length > 0) { // Корректна ли проверка? Возможна ли ошибка priceValues при пустом списке?
+        return {
+            products: products[0],  
+            priceMin : priceValues[0][0].min,
+            priceMax : priceValues[0][0].max,
+            length: products[0].length
+        }
+    }else {
+        return null;
     }
+
 }
 
 export async function getProduct(id) {
     const data = await db.query(`SELECT * FROM products WHERE id = "${id}"`);
-    const rating = await db.query(`SELECT AVG(rate) AS rate FROM product_rating WHERE product_id = "${id}"`);
-    const comments = await db.query(`SELECT comment FROM product_comments WHERE product_id = "${id}"`);
-    const product = {... data[0][0], rating: rating[0][0].rate, comments: comments[0]};
-
+    
     if(data[0][0]) { // товар с указанным id найден
+        // объединять ли с products?
+        const rating = await db.query(`SELECT AVG(rate) AS rate FROM product_rating WHERE product_id = "${id}"`);
+        const comments = await db.query(
+            `
+                SELECT c.comment_id, c.comment, c.user_id, u.username FROM product_comments c
+                INNER JOIN users u ON  c.user_id = u.id
+                WHERE c.product_id = "${id}"
+            `
+        );
+        const product = {... data[0][0], rating: rating[0][0].rate, comments: comments[0]};
+
         return {
             product
         };
@@ -155,7 +173,13 @@ export async function checkProductExistence(title) {
 }
 
 export async function postProduct(title, description, image, feild, category, sub, quantity, price) {
-    const id = await getLastProductId() + 1;
+    let id = await getLastProductId();
+
+    if(id) {
+        id = id + 1;
+    }else {
+        id = 1; // самый первый продукт
+    }
     
     await db.query(
         `
@@ -170,59 +194,65 @@ export async function postProduct(title, description, image, feild, category, su
 }
 
 export async function updateProduct(id, title, description, image, feild, category, sub, quantity, price) {
-    const filters = [];
-    const params = [];
-
-    if(title) {
-        filters.push("title = ?");
-        params.push(title);
-    }
-
-    if(description) {
-        filters.push("description = ?");
-        params.push(description);
-    }
-
-    if(image) {
-        filters.push("image = ?");
-        params.push(image);
-    }
-
-    if(feild) {
-        filters.push("feildOfApplication = ?");
-        params.push(feild);
-    }
-
-    if(category) {
-        filters.push("category = ?");
-        params.push(category);
-    }
-
-    if(sub) {
-        filters.push("subcategory = ?");
-        params.push(sub);
-    }
-
-    if(quantity) {
-        filters.push("quantity = ?");
-        params.push(quantity);
-    }
-
-    if(price) {
-        filters.push("price = ?");
-        params.push(price);
-    }
-
-    await db.query(
-        `
-            UPDATE products SET ${filters.join(",")}
-            WHERE id="${id}"
-        `,
-        params
-    );
-
     const product = await getProduct(id);
-    return product;
+
+    if(product) { // если продукта найден, обновляем
+        const filters = [];
+        const params = [];
+
+        if(title) {
+            filters.push("title = ?");
+            params.push(title);
+        }
+
+        if(description) {
+            filters.push("description = ?");
+            params.push(description);
+        }
+
+        if(image) {
+            filters.push("image = ?");
+            params.push(image);
+        }
+
+        if(feild) {
+            filters.push("feildOfApplication = ?");
+            params.push(feild);
+        }
+
+        if(category) {
+            filters.push("category = ?");
+            params.push(category);
+        }
+
+        if(sub) {
+            filters.push("subcategory = ?");
+            params.push(sub);
+        }
+
+        if(quantity) {
+            filters.push("quantity = ?");
+            params.push(quantity);
+        }
+
+        if(price) {
+            filters.push("price = ?");
+            params.push(price);
+        }
+
+        await db.query(
+            `
+                UPDATE products SET ${filters.join(",")}
+                WHERE id="${id}"
+            `,
+            params
+        );
+
+        const updatedProduct = await getProduct(id);
+        return updatedProduct;
+    }else {
+        return null;
+    }
 }
 
 export async function deleteProduct(id) {
@@ -235,7 +265,48 @@ export async function deleteProduct(id) {
     return product;
 }
 
+export async function postComment(productId, commentText, userId) {
+    const product = await getProduct(productId);
+
+    if(product) {
+        let commentId = await getLastCommentId();
+    
+        if(commentId) {
+            commentId = commentId + 1;
+        }else {
+            commentId = 1; // самый первый комментарий
+        }
+    
+        await db.query(
+            `
+                INSERT INTO product_comments(product_id, comment_id, comment, user_id) 
+                VALUES("${productId}", "${commentId}", "${commentText}", "${userId}")
+            `
+        );
+    
+        const comment = await db.query(` SELECT * FROM product_comments WHERE comment_id = "${commentId}"`);
+        return comment[0][0];
+    }else {
+        return null;
+    }
+}
+
 async function getLastProductId() {
     const lastId = await db.query('SELECT id FROM products ORDER BY id DESC LIMIT 1');
-    return lastId[0][0].id;
+
+    if(lastId[0][0]) {
+        return lastId[0][0].id; 
+    }
+
+    return null; // записей еще нет
+}
+
+async function getLastCommentId() {
+    const lastId = await db.query("SELECT comment_id FROM product_comments ORDER BY comment_id DESC LIMIT 1");
+    
+    if(lastId[0][0]) {
+        return lastId[0][0].comment_id; 
+    }
+
+    return null; // записей еще нет
 }

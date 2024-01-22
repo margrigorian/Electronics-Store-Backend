@@ -8,8 +8,8 @@ import { deleteProductController } from "../controllers/deleteProductController.
 
 const router = express.Router();
 
-router.post("/admin", authenticate(true), upload.single("image"), validate("post"), postProductController);
-router.put("/admin", authenticate(true), upload.single("image"), validate("put"), putProductController);
-router.delete("/admin", authenticate(true), validate("delete"), deleteProductController);
+router.post("/admin", authenticate(true), upload.single("image"), validate("postProduct"), postProductController);
+router.put("/admin", authenticate(true), upload.single("image"), validate("putProduct"), putProductController);
+router.delete("/admin", authenticate(true), validate("deleteProduct"), deleteProductController);
 
 export default router;

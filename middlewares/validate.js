@@ -30,7 +30,10 @@ export function validate(action) {
                 page: z.preprocess((a) => a === "" ? a : parseInt(String(a), 10), z.union([z.number().positive(), z.literal("")])).optional(z.undefined()),
                 limit: z.preprocess((a) => a === "" ? a : parseInt(String(a), 10), z.union([z.number().positive(), z.literal("")])).optional(z.undefined())
             }),
-            post: z.object({
+            getProduct: z.object({
+                productId: z.preprocess((a) => parseInt(String(a), 10), z.number().positive()) // проверка id из params
+            }),
+            postProduct: z.object({
                 title: z.string().min(2),
                 description: z.string().min(2),
                 feildOfApplication: z.union([z.literal("smart-home"), z.literal("life-style")]),
@@ -45,7 +48,7 @@ export function validate(action) {
                 quantity: z.preprocess((a) => parseInt(String(a), 10), z.number().nonnegative()), // допускается 0
                 price: z.preprocess((a) => parseInt(String(a), 10), z.number().positive()),
             }),
-            put: z.object({
+            putProduct: z.object({
                 id: z.preprocess((a) => parseInt(String(a), 10), z.number().positive()),
                 title: z.union([z.string().min(2), z.literal(""), z.undefined()]),
                 description: z.union([z.string().min(2), z.literal(""), z.undefined()]),
@@ -65,11 +68,21 @@ export function validate(action) {
                 quantity: z.preprocess((a) => a === "" ? a : parseInt(String(a), 10), z.union([z.number().nonnegative(), z.literal("")])).optional(z.undefined()),
                 price: z.preprocess((a) => a === "" ? a : parseInt(String(a), 10), z.union([z.number().positive(), z.literal("")])).optional(z.undefined())
             }),
-            delete: z.object({
-                id: z.number().positive()
+            deleteProduct: z.object({
+                id: z.number().positive() // отправлено через req.body
+            }),
+            postComment: z.object({
+                productId: z.preprocess((a) => parseInt(String(a), 10), z.number().positive()), // проверка id из params
+                comment: z.string().min(2)
             })
         }
 
+        const { id } = req.params; // для getProductController и postCommentController
+        
+        if(id) {
+            req.body = {...req.body, productId: id}
+        }
+        
         let validatedData;
         const queryParams = req.query;
         
