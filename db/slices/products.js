@@ -1,3 +1,4 @@
+import { promise } from "zod";
 import db from "../db.js";
 
 export async function getFeildOfApplicationCategories(feildOfApplication) {
@@ -143,21 +144,10 @@ export async function getProduct(id) {
     const data = await db.query(`SELECT * FROM products WHERE id = "${id}"`);
     
     if(data[0][0]) { // товар с указанным id найден
-        // объединять ли с products?
-        let avgRating = await db.query(`SELECT AVG(rate) AS rate FROM product_rating WHERE product_id = "${id}"`);
-        if(avgRating[0][0].rate) { // оценки присутствуют
-            avgRating = +avgRating[0][0].rate;
-        }else {
-            avgRating = avgRating[0][0].rate; // будет null
-        }
+       
+        const avgRating = await getAvgRating(id);
+        const comments = await getComments(id);
 
-        const comments = await db.query(
-            `
-                SELECT c.comment_id, c.comment, c.user_id, u.username FROM product_comments c
-                INNER JOIN users u ON  c.user_id = u.id
-                WHERE c.product_id = "${id}"
-            `
-        );
         // user_id - для отрисовки оценки с комментариями
         const rates = await db.query(
             `
@@ -165,7 +155,7 @@ export async function getProduct(id) {
                 WHERE product_id = "${id}"
             `
         );
-        const product = {... data[0][0], avgRating, comments: comments[0], rates: rates[0]};
+        const product = {... data[0][0], avgRating, comments, rates: rates[0]};
 
         return {
             product
@@ -290,4 +280,41 @@ async function getLastProductId() {
     return null; // записей еще нет
 }
 
+async function getAvgRating(id) {
+    let avgRating = await db.query(`SELECT AVG(rate) AS rate FROM product_rating WHERE product_id = "${id}"`);
+    
+    if(avgRating[0][0].rate) { // оценки присутствуют
+        avgRating = +avgRating[0][0].rate;
+    }else {
+        avgRating = avgRating[0][0].rate; // будет null
+    }
 
+    return avgRating;
+}
+
+async function getComments(id) {
+    const comments = await db.query(
+        `
+            SELECT c.comment_id, c.comment, c.user_id, u.username FROM product_comments c
+            INNER JOIN users u ON  c.user_id = u.id
+            WHERE c.product_id = "${id}"
+        `
+    );
+
+    return comments[0];
+}
+
+export async function addAvgRatingAndCommentsToProducts(products) {
+    let fiiledProductsArr = products.map(async el => {
+        const avgRating = await getAvgRating(el.id);
+        const comments = await getComments(el.id);
+        el = {...el, avgRating, comments};
+        return el;
+    })
+
+    fiiledProductsArr = await Promise.all(fiiledProductsArr).then(arr => arr);
+
+    return {
+        products: fiiledProductsArr
+    };
+}
