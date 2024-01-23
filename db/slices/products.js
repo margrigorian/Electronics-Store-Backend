@@ -158,10 +158,10 @@ export async function getProduct(id) {
                 WHERE c.product_id = "${id}"
             `
         );
-        // rate_id - для put-запросов с фронта, user_id - для отрисовки оценки с комментариями
+        // user_id - для отрисовки оценки с комментариями
         const rates = await db.query(
             `
-                SELECT rate_id, rate, user_id FROM product_rating 
+                SELECT rate, user_id FROM product_rating 
                 WHERE product_id = "${id}"
             `
         );
@@ -280,88 +280,6 @@ export async function deleteProduct(id) {
     return product;
 }
 
-export async function getComment(commentId) {
-    const comment = await db.query(`SELECT * FROM product_comments WHERE comment_id = "${commentId}"`);
-
-    if(comment) {
-        return {
-            comment: comment[0][0]
-        }
-    }
-
-    return null;
-}
-
-export async function postComment(productId, commentText, userId) {
-    const product = await getProduct(productId);
-
-    if(product) {
-        let commentId = await getLastCommentId();
-    
-        if(commentId) {
-            commentId = commentId + 1;
-        }else {
-            commentId = 1; // самый первый комментарий
-        }
-    
-        await db.query(
-            `
-                INSERT INTO product_comments(product_id, comment_id, comment, user_id) 
-                VALUES("${productId}", "${commentId}", "${commentText}", "${userId}")
-            `
-        );
-    
-        const comment = await db.query(` SELECT * FROM product_comments WHERE comment_id = "${commentId}"`);
-        return {
-            comment: comment[0][0]
-        }
-        
-    }else {
-        return null;
-    }
-}
-
-export async function deleteComment(commentId) {
-    await db.query(`DELETE FROM product_comments WHERE comment_id = "${commentId}"`);
-}
-
-async function getUserRateOfProduct(productId, userId){
-    const rateInfo = await db.query(
-        `SELECT * FROM product_rating WHERE product_id = "${productId}" AND user_id = "${userId}"`
-    ); 
-
-    return rateInfo[0][0];
-}
-
-export async function postRate(productId, rate, userId) {
-    const product = await getProduct(productId);
-    const userRate = await getUserRateOfProduct(productId, userId);
-
-    if(product && !userRate) { // продукт есть и оценка еще не проставлена
-        let rateId = await getLastRateId();
-    
-        if(rateId) {
-            rateId = rateId + 1;
-        }else {
-            rateId = 1; // самый первая оценка
-        }
-
-        await db.query(
-            `
-                INSERT INTO product_rating(product_id, rate_id, rate, user_id) 
-                VALUES("${productId}", "${rateId}", "${rate}", "${userId}")
-            `
-        );
-    
-        const productRate = await db.query(` SELECT * FROM product_rating WHERE rate_id = "${rateId}"`);
-        return {
-            rate: productRate[0][0]
-        }
-    }
-
-    return null;
-}
-
 async function getLastProductId() {
     const lastId = await db.query('SELECT id FROM products ORDER BY id DESC LIMIT 1');
 
@@ -372,23 +290,4 @@ async function getLastProductId() {
     return null; // записей еще нет
 }
 
-async function getLastCommentId() {
-    const lastId = await db.query("SELECT comment_id FROM product_comments ORDER BY comment_id DESC LIMIT 1");
-    
-    if(lastId[0][0]) {
-        return lastId[0][0].comment_id; 
-    }
-
-    return null; // комментариев еще нет
-}
-
-async function getLastRateId() {
-    const lastId = await db.query("SELECT rate_id FROM product_rating ORDER BY rate_id DESC LIMIT 1");
-    
-    if(lastId[0][0]) {
-        return lastId[0][0].rate_id; 
-    }
-
-    return null; // оценок еще нет
-}
 

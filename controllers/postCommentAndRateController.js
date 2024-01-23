@@ -1,5 +1,6 @@
 import getResponseTemplate from "../lib/responseTemplate.js";
-import { postComment, postRate } from "../db/slices/products.js";
+import { getProduct } from "../db/slices/products.js";
+import { postComment, postRate } from "../db/slices/evaluation.js";
 
 export async function postCommentAndRateController(req, res) {
     try{
@@ -8,18 +9,23 @@ export async function postCommentAndRateController(req, res) {
         const response = getResponseTemplate();
         let data = "";
 
-        if(comment) { // post на comment
-            data = await postComment(+productId, comment, forUser.id);
-        }else if(rate) { // post на rate
-            data = await postRate(+productId, +rate, forUser.id);
+        const product = await getProduct(productId);
+
+        if(product) {
+            if(comment) { // post на comment
+                data = await postComment(+productId, comment, forUser.id);
+            }else if(rate) { // post на rate
+                data = await postRate(+productId, +rate, forUser.id); // там же проверка на дублирование
+            }
+    
+            if(data) { // продукт существует, комментарий или оценка добавлены
+                response.data = {
+                    data
+                }
+                return res.status(201).json(response);
+            }
         }
 
-        if(data) { // продукт существует, комментарий или оценка добавлены
-            response.data = {
-                data
-            }
-            return res.status(201).json(response);
-        }
 
         // или же продукта не существует, или же оценка уже проставлена, её мы не дублируем
         const message = "400 Bad Request"; 

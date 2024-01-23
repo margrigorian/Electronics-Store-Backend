@@ -1,5 +1,5 @@
 import getResponseTemplate from "../lib/responseTemplate.js";
-import { getComment, deleteComment } from "../db/slices/products.js";
+import { getComment, deleteComment } from "../db/slices/evaluation.js";
 
 export async function deleteCommentController(req, res) {
     try{
