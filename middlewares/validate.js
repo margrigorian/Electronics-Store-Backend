@@ -3,6 +3,12 @@ import getResponseTemplate from "../lib/responseTemplate.js";
 
 export function validate(action) {
     return (req, res, next) => {
+
+        const orderSchemas = z.object({
+            productId: z.number().positive(),
+            quantity: z.number().positive()
+        })
+
         const schemas = {
             registration: z.object({
                 username: z.string().min(1),
@@ -65,6 +71,9 @@ export function validate(action) {
             }),
             deleteComment: z.object({
                 commentId: z.number().positive() // отправлено через req.body
+            }),
+            productsPurchase: z.object({
+                order: z.array(orderSchemas)
             })
         }
 

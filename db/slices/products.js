@@ -1,4 +1,3 @@
-import { promise } from "zod";
 import db from "../db.js";
 
 export async function getFeildOfApplicationCategories(feildOfApplication) {
@@ -280,6 +279,7 @@ async function getLastProductId() {
     return null; // записей еще нет
 }
 
+// перенести в evaluation slice? 
 async function getAvgRating(id) {
     let avgRating = await db.query(`SELECT AVG(rate) AS rate FROM product_rating WHERE product_id = "${id}"`);
     
