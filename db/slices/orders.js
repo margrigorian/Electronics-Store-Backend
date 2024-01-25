@@ -1,15 +1,25 @@
 import db from "../db.js";
-import { getProduct } from "./products.js";
+import { getProduct, updateProduct } from "./products.js";
 
 export async function postOrder(userOrder, userId) {
     // проверка наличия заказанных товаров
     let orderedProducts = userOrder.map(async (el, i) => {
         let product = await getProduct(el.productId);
 
-        if(product) {
+        if(product && product.product.quantity > 0) { // товар есть, и его общее количество на "складе" > 0
             product = product.product;
-            product.quantity = userOrder[i].quantity; // заменила общее количество на заказанное юзером
-            return product;
+            
+            // кол-во заказанного товара соответствует имеющемуся кол-ву на "складе"
+            if(userOrder[i].quantity <= product.quantity) { 
+                const quantity = product.quantity - userOrder[i].quantity;
+                // обновляем количество оставшегося товара в базе
+                await updateProduct(product.id, "", "", "", "", "", "", quantity, "");
+                // заменила общее количество на заказанное юзером, чтобы легче выстраивать объекты order ниже
+                product.quantity = userOrder[i].quantity; 
+                return product;
+            }
+            
+            return null;
         }
 
         return null;
@@ -17,7 +27,7 @@ export async function postOrder(userOrder, userId) {
 
     orderedProducts = await Promise.all(orderedProducts).then(result => result);
     // убираем null значения и оставляем продукты с количеством > 0 
-    orderedProducts = orderedProducts.filter(item => item && item.quantity > 0);
+    orderedProducts = orderedProducts.filter(item => item);
 
     const orderIdArr = []; // для запросов к таблице order
     let order = []; // результирующий массив заказанных продуктов
@@ -25,7 +35,7 @@ export async function postOrder(userOrder, userId) {
     if(orderedProducts.length > 0) { // заказанные продукты существуют
         let orderId = await getOrderId();
         const params = [];
-        let expression = [];
+        const expression = [];
         
         orderedProducts.forEach(async el => {
 

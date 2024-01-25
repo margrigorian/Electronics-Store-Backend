@@ -15,7 +15,7 @@ export async function productsPurchaseController(req, res) {
             return res.status(201).json(response);
         }
         
-        // id продуктов в заказе неверные или же заказанные продукты отсутвуют "на складе" (quantity = 0)
+        // id продуктов в заказе неверные или же заказанные товары отсутвуют "на складе" (quantity = 0)
         const message = "The sent data is incorrect";
         response.error = {
             message
