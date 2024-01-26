@@ -9,39 +9,35 @@ export async function getFeildOfApplicationCategories(feildOfApplication) {
         `
     );
 
-    if(categories[0].length > 0) {
-
+    if (categories[0].length > 0) {
         // В-I
-    
+
         // запрашиваем продукты указанных категорий, на выходе - массивы промисов
-        let products_list = categories[0].map(async (el, i) => {
-            const products = await db.query(
-                `SELECT id, title, image, price FROM products WHERE category = "${el.category}" LIMIT 3`
-            );
-    
+        let products_list = categories[0].map(async el => {
+            const products = await db.query(`SELECT id, title, image, price FROM products WHERE category = "${el.category}" LIMIT 3`);
+
             return products[0];
         });
-    
+
         products_list = await Promise.all(products_list).then(list => list);
-    
+
         const result = categories[0].map((el, i) => {
-            return {category: el.category, products: products_list[i]}; // формируем необходимую структуру
+            return { category: el.category, products: products_list[i] }; // формируем необходимую структуру
         });
-    
+
         return {
-            categories: result  
+            categories: result
         };
-    }else {
+    } else {
         return null;
     }
-
 
     // В-II
 
     // запрашиваем продукты указанной области применения
     // const products = await db.query(
     //     `
-    //         SELECT id, title, image, category, price FROM products 
+    //         SELECT id, title, image, category, price FROM products
     //         WHERE feildOfApplication = "${feildOfApplication}"
     //     `
     // );
@@ -66,18 +62,18 @@ export async function getFeildOfApplicationCategories(feildOfApplication) {
 export async function getProductList(search, category, subcategory, minPrice, maxPrice, order, page, limit) {
     const filters = [];
     const params = [];
-    
-    if(search) {
+
+    if (search) {
         filters.push("title LIKE ?");
-        params.push(`%${search}%`); 
+        params.push(`%${search}%`);
     }
 
-    if(category !== "") {
+    if (category !== "") {
         filters.push("category = ?");
         params.push(category);
     }
 
-    if(subcategory) { 
+    if (subcategory) {
         filters.push("subcategory = ?");
         params.push(subcategory);
     }
@@ -87,14 +83,14 @@ export async function getProductList(search, category, subcategory, minPrice, ma
     const priceFilter = [];
     const priceParam = [];
 
-    if(subcategory) {
+    if (subcategory) {
         priceFilter.push("WHERE subcategory = ?");
         priceParam.push(subcategory);
-    }else if(category) {
+    } else if (category) {
         priceFilter.push("WHERE category = ?");
         priceParam.push(category);
     }
-    
+
     const priceValues = await db.query(
         `
             SELECT CEIL(MAX(price)) AS max, FLOOR(MIN(price)) AS min FROM products
@@ -103,19 +99,19 @@ export async function getProductList(search, category, subcategory, minPrice, ma
         priceParam
     );
 
-    if(minPrice && !maxPrice) {
+    if (minPrice && !maxPrice) {
         params.push(minPrice, priceValues[0][0].max);
-    }else if(!minPrice && maxPrice) {
+    } else if (!minPrice && maxPrice) {
         params.push(priceValues[0][0].min, maxPrice);
-    }else if(minPrice && maxPrice) {
+    } else if (minPrice && maxPrice) {
         params.push(minPrice, maxPrice);
-    }else {
+    } else {
         params.push(priceValues[0][0].min, priceValues[0][0].max);
     }
 
     // ПАГИНАЦИЯ
     params.push((page - 1) * limit, limit);
-    
+
     const products = await db.query(
         `
             SELECT id, title, image, price, subcategory FROM products 
@@ -126,24 +122,25 @@ export async function getProductList(search, category, subcategory, minPrice, ma
         params
     );
 
-    if(products[0].length > 0) { // Корректна ли проверка? Возможна ли ошибка priceValues при пустом списке?
+    if (products[0].length > 0) {
+        // Корректна ли проверка? Возможна ли ошибка priceValues при пустом списке?
         return {
-            products: products[0],  
-            priceMin : priceValues[0][0].min,
-            priceMax : priceValues[0][0].max,
+            products: products[0],
+            priceMin: priceValues[0][0].min,
+            priceMax: priceValues[0][0].max,
             length: products[0].length
-        }
-    }else {
+        };
+    } else {
         return null;
     }
-
 }
 
 export async function getProduct(id) {
     const data = await db.query(`SELECT * FROM products WHERE id = "${id}"`);
-    
-    if(data[0][0]) { // товар с указанным id найден
-       
+
+    if (data[0][0]) {
+        // товар с указанным id найден
+
         const avgRating = await getAvgRating(id);
         const comments = await getComments(id);
 
@@ -154,12 +151,12 @@ export async function getProduct(id) {
                 WHERE product_id = "${id}"
             `
         );
-        const product = {... data[0][0], avgRating, comments, rates: rates[0]};
+        const product = { ...data[0][0], avgRating, comments, rates: rates[0] };
 
         return {
             product
         };
-    }else {
+    } else {
         return null;
     }
 }
@@ -167,11 +164,11 @@ export async function getProduct(id) {
 export async function checkProductExistence(title) {
     const product = await db.query(`SELECT * FROM products WHERE title = ?`, [title]);
 
-    if(product[0][0]) {
+    if (product[0][0]) {
         return {
             product: product[0][0]
-        }
-    }else {
+        };
+    } else {
         return null;
     }
 }
@@ -179,19 +176,19 @@ export async function checkProductExistence(title) {
 export async function postProduct(title, description, image, feild, category, sub, quantity, price) {
     let id = await getLastProductId();
 
-    if(id) {
+    if (id) {
         id = id + 1;
-    }else {
+    } else {
         id = 1; // самый первый продукт
     }
-    
+
     await db.query(
         `
             INSERT INTO products(id, title, description, image, feildOfApplication, category, subcategory, quantity, price) 
             VALUES("${id}", ?, ?, "${image}", "${feild}", "${category}", "${sub}", "${quantity}", "${price}")
         `,
         [title, description]
-    )
+    );
 
     const product = await getProduct(id);
     return product;
@@ -200,46 +197,47 @@ export async function postProduct(title, description, image, feild, category, su
 export async function updateProduct(id, title, description, image, feild, category, sub, quantity, price) {
     const product = await getProduct(id);
 
-    if(product) { // если продукта найден, обновляем
+    if (product) {
+        // если продукта найден, обновляем
         const filters = [];
         const params = [];
 
-        if(title) {
+        if (title) {
             filters.push("title = ?");
             params.push(title);
         }
 
-        if(description) {
+        if (description) {
             filters.push("description = ?");
             params.push(description);
         }
 
-        if(image) {
+        if (image) {
             filters.push("image = ?");
             params.push(image);
         }
 
-        if(feild) {
+        if (feild) {
             filters.push("feildOfApplication = ?");
             params.push(feild);
         }
 
-        if(category) {
+        if (category) {
             filters.push("category = ?");
             params.push(category);
         }
 
-        if(sub) {
+        if (sub) {
             filters.push("subcategory = ?");
             params.push(sub);
         }
 
-        if(quantity) {
+        if (quantity) {
             filters.push("quantity = ?");
             params.push(quantity);
         }
 
-        if(price) {
+        if (price) {
             filters.push("price = ?");
             params.push(price);
         }
@@ -254,7 +252,7 @@ export async function updateProduct(id, title, description, image, feild, catego
 
         const updatedProduct = await getProduct(id);
         return updatedProduct;
-    }else {
+    } else {
         return null;
     }
 }
@@ -262,7 +260,7 @@ export async function updateProduct(id, title, description, image, feild, catego
 export async function deleteProduct(id) {
     const product = await getProduct(id);
 
-    if(product) {
+    if (product) {
         await db.query(`DELETE FROM products WHERE id = "${id}"`);
     }
 
@@ -270,22 +268,23 @@ export async function deleteProduct(id) {
 }
 
 async function getLastProductId() {
-    const lastId = await db.query('SELECT id FROM products ORDER BY id DESC LIMIT 1');
+    const lastId = await db.query("SELECT id FROM products ORDER BY id DESC LIMIT 1");
 
-    if(lastId[0][0]) {
-        return lastId[0][0].id; 
+    if (lastId[0][0]) {
+        return lastId[0][0].id;
     }
 
     return null; // записей еще нет
 }
 
-// перенести в evaluation slice? 
+// перенести в evaluation slice?
 async function getAvgRating(id) {
     let avgRating = await db.query(`SELECT AVG(rate) AS rate FROM product_rating WHERE product_id = "${id}"`);
-    
-    if(avgRating[0][0].rate) { // оценки присутствуют
+
+    if (avgRating[0][0].rate) {
+        // оценки присутствуют
         avgRating = +avgRating[0][0].rate;
-    }else {
+    } else {
         avgRating = avgRating[0][0].rate; // будет null
     }
 
@@ -308,9 +307,9 @@ export async function addAvgRatingAndCommentsToProducts(products) {
     let fiiledProductsArr = products.map(async el => {
         const avgRating = await getAvgRating(el.id);
         const comments = await getComments(el.id);
-        el = {...el, avgRating, comments};
+        el = { ...el, avgRating, comments };
         return el;
-    })
+    });
 
     fiiledProductsArr = await Promise.all(fiiledProductsArr).then(arr => arr);
 

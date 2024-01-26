@@ -1,7 +1,7 @@
 import express from "express";
 import { authenticate } from "../middlewares/authenticate.js";
 import { validate } from "../middlewares/validate.js";
-import { queriesParamsValidate  } from "../middlewares/queriesParamsValidate.js";
+import { queriesParamsValidate } from "../middlewares/queriesParamsValidate.js";
 import { feildOfApplicationController } from "../controllers/feildOfApplicationController.js";
 import { productListController } from "../controllers/productListController.js";
 import { searchController } from "../controllers/searchController.js";

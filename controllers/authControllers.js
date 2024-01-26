@@ -2,20 +2,20 @@ import getResponseTemplate from "../lib/responseTemplate.js";
 import { checkUser, addNewUser, getToken } from "../servicing/authService.js";
 
 export async function userRegistrationController(req, res) {
-    try{
+    try {
         let message;
         const response = getResponseTemplate();
 
-        const {username, email, password} = req.body;
+        const { username, email, password } = req.body;
         const user = await checkUser(email, password);
 
-        if(user === null) {
+        if (user === null) {
             const newUser = await addNewUser(username, email, password);
-            message = "Successful registration! Please login" // для получения токена и дальнейших действий
+            message = "Successful registration! Please login"; // для получения токена и дальнейших действий
             response.data = {
                 message,
                 newUser
-            }
+            };
             return res.status(201).json(response);
         }
 
@@ -24,7 +24,7 @@ export async function userRegistrationController(req, res) {
             message
         };
         return res.status(406).json(response);
-    }catch(err) {
+    } catch (err) {
         const message = "500 Server Error";
         const response = getResponseTemplate();
         response.error = {
@@ -35,20 +35,21 @@ export async function userRegistrationController(req, res) {
 }
 
 export async function userLoginController(req, res) {
-    try{
+    try {
         let message;
         const response = getResponseTemplate();
 
-        const {email, password} = req.body;
+        const { email, password } = req.body;
         const user = await checkUser(email, password);
 
-        if(user) { // авторизация прошла успешно, выдаем токен
+        if (user) {
+            // авторизация прошла успешно, выдаем токен
             const token = getToken(user.email);
             message = "Successful authorization! You can continue your session";
             response.data = {
                 message,
-                user: {...user, token}
-            }
+                user: { ...user, token }
+            };
             return res.status(201).json(response);
         }
 
@@ -57,7 +58,7 @@ export async function userLoginController(req, res) {
             message
         };
         return res.status(406).json(response);
-    }catch(err) {
+    } catch (err) {
         const message = "500 Server Error";
         const response = getResponseTemplate();
         response.error = {

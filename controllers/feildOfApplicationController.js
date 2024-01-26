@@ -3,7 +3,7 @@ import getResponseTemplate from "../lib/responseTemplate.js";
 import { getFeildOfApplicationCategories } from "../db/slices/products.js";
 
 export async function feildOfApplicationController(req, res) {
-    try{
+    try {
         const reqURL = url.parse(req.url, true);
         // frontend в обоих случаях будет отрисовывать весь список категорий продуктов из этой области применения
         const feildOfApplication = reqURL.pathname.split("/"); // область применения продукта ([1])
@@ -12,24 +12,24 @@ export async function feildOfApplicationController(req, res) {
 
         const response = getResponseTemplate();
 
-        if(data) {
+        if (data) {
             response.data = {
                 data
-            }
+            };
             return res.status(200).json(response);
         }
 
         const message = "404 NOT FOUND"; // категории не найдены
         response.error = {
             message
-        }
+        };
         return res.status(404).json(response);
-    }catch(err) {
+    } catch (err) {
         const message = "500 Server Error";
         const response = getResponseTemplate();
         response.error = {
             message
-        }
+        };
         res.status(500).json(response);
     }
 }
