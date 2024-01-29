@@ -1,5 +1,6 @@
 import express from "express";
 import { authenticate } from "../middlewares/authenticate.js";
+import { queriesParamsValidate } from "../middlewares/queriesParamsValidate.js";
 import { validate } from "../middlewares/validate.js";
 import upload from "../middlewares/fileProcessing.js";
 import { allProductsController } from "../controllers/allProductsController.js";
@@ -10,7 +11,7 @@ import { productsPurchaseController } from "../controllers/productsPurchaseContr
 
 const router = express.Router();
 
-router.get("/admin", authenticate(true), allProductsController);
+router.get("/admin", authenticate(true), queriesParamsValidate("allProductsQueries"), allProductsController);
 router.post("/admin", authenticate(true), upload.single("image"), validate("postProduct"), postProductController);
 router.put("/admin", authenticate(true), upload.single("image"), validate("putProduct"), putProductController);
 router.delete("/admin", authenticate(true), validate("deleteProduct"), deleteProductController);

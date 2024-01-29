@@ -4,6 +4,14 @@ import getResponseTemplate from "../lib/responseTemplate.js";
 export function queriesParamsValidate(action) {
     return (req, res, next) => {
         const schemas = {
+            allProductsQueries: z.object({
+                page: z
+                    .preprocess(a => (a === "" ? a : parseInt(String(a), 10)), z.union([z.number().positive(), z.literal("")]))
+                    .optional(z.undefined()),
+                limit: z
+                    .preprocess(a => (a === "" ? a : parseInt(String(a), 10)), z.union([z.number().positive(), z.literal("")]))
+                    .optional(z.undefined())
+            }),
             productListQueries: z.object({
                 // .optional обрабатывает undefined, NaN - нет
                 category: z.union([z.literal("kitchen appliance"), z.literal("office"), z.literal("wearable"), z.literal(""), z.undefined()]),

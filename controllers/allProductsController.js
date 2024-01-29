@@ -3,8 +3,9 @@ import { getProductList, addAvgRatingAndCommentsToProducts } from "../db/slices/
 
 export async function allProductsController(req, res) {
     try {
-        const page = 1;
-        const limit = 5;
+        let { page, limit } = req.query;
+        page ? (page = +page) : (page = 1);
+        limit ? (limit = +limit) : (limit = 5);
         let data = "";
 
         const productsList = await getProductList("", "", "", "", "", "", page, limit);
