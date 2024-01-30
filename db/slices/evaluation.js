@@ -59,13 +59,12 @@ export async function getUserRateOfProduct(productId, userId) {
 export async function postRate(productId, rate, userId) {
     const userRate = await getUserRateOfProduct(productId, userId);
 
+    // правило: один пользователь -  одна оценка к товару, иначе будет дублирование строк в БД
     if (!userRate) {
-        // оценка не должна быть повторно проставлена
-
         await db.query(
             `
-                INSERT INTO product_rating(product_id, rate, user_id) 
-                VALUES("${productId}", "${rate}", "${userId}")
+            INSERT INTO product_rating(product_id, rate, user_id) 
+            VALUES("${productId}", "${rate}", "${userId}")
             `
         );
 
@@ -77,7 +76,7 @@ export async function postRate(productId, rate, userId) {
 }
 
 export async function putRate(productId, rate, userId) {
-    // обновляем
+    // дублирование можно останавливать на front
     await db.query(
         `
             UPDATE product_rating SET rate = "${rate}" 

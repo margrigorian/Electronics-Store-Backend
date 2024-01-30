@@ -48,7 +48,7 @@ export async function putCommentAndRateController(req, res) {
             }
         }
 
-        // комментария или оценки не нет, обновить их нельзя
+        // комментария или оценки нет, обновить их нельзя
         message = "400 Bad Request";
         response.error = {
             message

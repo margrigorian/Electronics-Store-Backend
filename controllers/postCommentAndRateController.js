@@ -17,7 +17,7 @@ export async function postCommentAndRateController(req, res) {
                 data = await postComment(+productId, comment, forUser.id);
             } else if (rate) {
                 // post на rate
-                data = await postRate(+productId, +rate, forUser.id); // там же проверка на дублирование
+                data = await postRate(+productId, +rate, forUser.id);
             }
 
             if (data) {
@@ -29,7 +29,7 @@ export async function postCommentAndRateController(req, res) {
             }
         }
 
-        // или же продукта не существует, или же оценка уже проставлена, её мы не дублируем
+        // товара с таким id нет или оценка к продукту уже проставлена, в таком случае post-запрос явл. ошибочным
         const message = "400 Bad Request";
         response.error = {
             message
