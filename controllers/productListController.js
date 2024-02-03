@@ -10,6 +10,7 @@ export async function productListController(req, res) {
         maxPrice ? (maxPrice = +maxPrice) : (maxPrice = "");
         page ? (page = +page) : (page = 1);
         limit ? (limit = +limit) : (limit = 5);
+
         const data = await getProductList("", category, subcategory, minPrice, maxPrice, order, page, limit);
         const response = getResponseTemplate();
 

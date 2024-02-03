@@ -78,6 +78,9 @@ export async function getProductList(search, category, subcategory, minPrice, ma
         params.push(subcategory);
     }
 
+    // SUBCATEGORIES для фильтрации на фронте
+    const subcategories = await db.query(`SELECT DISTINCT subcategory FROM products WHERE category = "${category}"`);
+
     // РАНЖИРОВАНИЕ ЦЕНЫ
     filters.push("price BETWEEN ? AND ?");
     const priceFilter = [];
@@ -112,12 +115,27 @@ export async function getProductList(search, category, subcategory, minPrice, ma
     // ПАГИНАЦИЯ
     params.push((page - 1) * limit, limit);
 
+    // без category в select выдает ошибку, так как атрибут исп. в фильтрах
     const products = await db.query(
         `
-            SELECT id, title, image, price, subcategory FROM products 
-            WHERE ${filters.join(" AND ")}
+            SELECT id, title, image, price, AVG(rate) AS rate, category, subcategory FROM products 
+            LEFT JOIN product_rating ON products.id = product_rating.product_id
+            GROUP BY id
+            HAVING ${filters.join(" AND ")}
             ${order ? `ORDER BY price ${order === "asc" ? "asc" : "desc"}` : ""}
             LIMIT ?, ?
+        `,
+        params
+    );
+
+    // COUNT срабатывает неточно, приходится дублировать для получения общего кол-ва товаров
+    const productsQuantity = await db.query(
+        `
+            SELECT id, title, image, price, AVG(rate) AS rate, category, subcategory FROM products 
+            LEFT JOIN product_rating ON products.id = product_rating.product_id
+            GROUP BY id
+            HAVING ${filters.join(" AND ")}
+            ${order ? `ORDER BY price ${order === "asc" ? "asc" : "desc"}` : ""}
         `,
         params
     );
@@ -126,9 +144,10 @@ export async function getProductList(search, category, subcategory, minPrice, ma
         // Корректна ли проверка? Возможна ли ошибка priceValues при пустом списке?
         return {
             products: products[0],
+            subcategories: subcategories[0],
             priceMin: priceValues[0][0].min,
             priceMax: priceValues[0][0].max,
-            length: products[0].length
+            length: productsQuantity[0].length
         };
     } else {
         return null;

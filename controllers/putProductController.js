@@ -5,7 +5,8 @@ export async function putProductController(req, res) {
     try {
         let { id, title, description, feildOfApplication, category, subcategory, quantity, price } = req.body;
         let image;
-        req.file ? (image = req.file.filename) : (image = "");
+
+        req.file ? (image = req.file.path) : (image = "");
         quantity ? (quantity = +quantity) : (quantity = "");
         price ? (price = +price) : (price = "");
 
