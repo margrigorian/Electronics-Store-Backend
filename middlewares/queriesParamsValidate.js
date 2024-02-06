@@ -44,7 +44,7 @@ export function queriesParamsValidate(action) {
                 // лишние query-параметры не препятсвуют запросу
             }),
             searchQueries: z.object({
-                q: z.string().min(1),
+                q: z.string().optional(z.undefined()),
                 subcategory: z.union([
                     z.literal("kettle"),
                     z.literal("laptop"),
@@ -57,6 +57,14 @@ export function queriesParamsValidate(action) {
                     z.literal(""),
                     z.undefined()
                 ]),
+                // допустила number, "", undefined; в случае NaN случится ошибка (например, при "text")
+                minPrice: z
+                    .preprocess(a => (a === "" ? a : parseInt(String(a), 10)), z.union([z.number().positive(), z.literal("")]))
+                    .optional(z.undefined()),
+                maxPrice: z
+                    .preprocess(a => (a === "" ? a : parseInt(String(a), 10)), z.union([z.number().positive(), z.literal("")]))
+                    .optional(z.undefined()),
+                order: z.union([z.literal("asc"), z.literal("desc"), z.literal("")]).optional(z.undefined()),
                 page: z
                     .preprocess(a => (a === "" ? a : parseInt(String(a), 10)), z.union([z.number().positive(), z.literal("")]))
                     .optional(z.undefined()),

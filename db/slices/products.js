@@ -79,25 +79,45 @@ export async function getProductList(search, category, subcategory, minPrice, ma
     }
 
     // SUBCATEGORIES для фильтрации на фронте
-    const subcategories = await db.query(`SELECT DISTINCT subcategory FROM products WHERE category = "${category}"`);
+    let subcategories;
+
+    if (category) {
+        // при product-list
+        subcategories = await db.query(`SELECT DISTINCT subcategory FROM products WHERE category = "${category}"`);
+    } else {
+        // при search
+        subcategories = await db.query(`SELECT DISTINCT subcategory FROM products WHERE title LIKE "%${search}%"`);
+    }
+
+    subcategories = subcategories[0].map(el => el.subcategory);
+    // если subcategory "other" есть и она не находится в конце массива, переносим ее туда
+    if (subcategories.indexOf("other") !== -1 && subcategories.indexOf("other") !== subcategories.length - 1) {
+        subcategories.splice(subcategories.indexOf("other"), 1);
+        subcategories.push("other");
+    }
 
     // РАНЖИРОВАНИЕ ЦЕНЫ
     filters.push("price BETWEEN ? AND ?");
     const priceFilter = [];
     const priceParam = [];
 
+    if (search) {
+        priceFilter.push("title LIKE ?");
+        priceParam.push(`%${search}%`);
+    }
+
     if (subcategory) {
-        priceFilter.push("WHERE subcategory = ?");
+        priceFilter.push("subcategory = ?");
         priceParam.push(subcategory);
     } else if (category) {
-        priceFilter.push("WHERE category = ?");
+        priceFilter.push("category = ?");
         priceParam.push(category);
     }
 
     const priceValues = await db.query(
         `
             SELECT CEIL(MAX(price)) AS max, FLOOR(MIN(price)) AS min FROM products
-            ${priceFilter.length > 0 ? priceFilter[0] : ""}
+            ${priceFilter.length > 0 ? `WHERE ${priceFilter.join(" AND ")}` : ""}
         `,
         priceParam
     );
@@ -144,7 +164,7 @@ export async function getProductList(search, category, subcategory, minPrice, ma
         // Корректна ли проверка? Возможна ли ошибка priceValues при пустом списке?
         return {
             products: products[0],
-            subcategories: subcategories[0],
+            subcategories: subcategories,
             priceMin: priceValues[0][0].min,
             priceMax: priceValues[0][0].max,
             length: productsQuantity[0].length
