@@ -1,5 +1,6 @@
 import getResponseTemplate from "../lib/responseTemplate.js";
-import { getProductList, addAvgRatingAndCommentsToProducts } from "../db/slices/products.js";
+import { getProductList } from "../db/slices/products.js";
+import { addAvgRatingAndCommentsToProducts } from "../db/slices/evaluation.js";
 
 export async function allProductsController(req, res) {
     try {

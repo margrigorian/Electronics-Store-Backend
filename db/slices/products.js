@@ -1,4 +1,6 @@
 import db from "../db.js";
+import { getAvgRating, getCommentsWithRates, getRates } from "./evaluation.js";
+// import { getCommentsWithRates } from "./evaluation.js";
 
 export async function getFeildOfApplicationCategories(feildOfApplication) {
     // определяем категории продуктов, относящиеся к указанной области применения
@@ -181,16 +183,9 @@ export async function getProduct(id) {
         // товар с указанным id найден
 
         const avgRating = await getAvgRating(id);
-        const comments = await getComments(id);
-
-        // user_id - для отрисовки оценки с комментариями
-        const rates = await db.query(
-            `
-                SELECT rate, user_id FROM product_rating 
-                WHERE product_id = "${id}"
-            `
-        );
-        const product = { ...data[0][0], avgRating, comments, rates: rates[0] };
+        const comments = await getCommentsWithRates(id);
+        const rates = await getRates(id);
+        const product = { ...data[0][0], avgRating, comments, rates };
 
         return {
             product
@@ -314,45 +309,4 @@ async function getLastProductId() {
     }
 
     return null; // записей еще нет
-}
-
-// перенести в evaluation slice?
-async function getAvgRating(id) {
-    let avgRating = await db.query(`SELECT AVG(rate) AS rate FROM product_rating WHERE product_id = "${id}"`);
-
-    if (avgRating[0][0].rate) {
-        // оценки присутствуют
-        avgRating = +avgRating[0][0].rate;
-    } else {
-        avgRating = avgRating[0][0].rate; // будет null
-    }
-
-    return avgRating;
-}
-
-async function getComments(id) {
-    const comments = await db.query(
-        `
-            SELECT c.comment_id, c.comment, c.user_id, u.username FROM product_comments c
-            INNER JOIN users u ON  c.user_id = u.id
-            WHERE c.product_id = "${id}"
-        `
-    );
-
-    return comments[0];
-}
-
-export async function addAvgRatingAndCommentsToProducts(products) {
-    let fiiledProductsArr = products.map(async el => {
-        const avgRating = await getAvgRating(el.id);
-        const comments = await getComments(el.id);
-        el = { ...el, avgRating, comments };
-        return el;
-    });
-
-    fiiledProductsArr = await Promise.all(fiiledProductsArr).then(arr => arr);
-
-    return {
-        products: fiiledProductsArr
-    };
 }

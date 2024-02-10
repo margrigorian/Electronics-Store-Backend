@@ -10,7 +10,7 @@ export async function deleteCommentController(req, res) {
         const comment = await getComment(commentId);
 
         if (comment) {
-            if (forUser.status === "admin" || comment.user_id === forUser.id) {
+            if (forUser.status === "admin" || comment.comment.user_id === forUser.id) {
                 await deleteComment(commentId);
 
                 response.data = {

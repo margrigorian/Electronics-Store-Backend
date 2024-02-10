@@ -108,3 +108,52 @@ async function getLastCommentId() {
 
 //     return null; // оценок еще нет
 // }
+
+export async function getAvgRating(id) {
+    let avgRating = await db.query(`SELECT AVG(rate) AS rate FROM product_rating WHERE product_id = "${id}"`);
+
+    if (avgRating[0][0].rate) {
+        // оценки присутствуют
+        avgRating = +avgRating[0][0].rate;
+    } else {
+        avgRating = avgRating[0][0].rate; // будет null
+    }
+
+    return avgRating;
+}
+
+// используется в getProduct
+export async function getCommentsWithRates(id) {
+    const comments = await db.query(
+        `
+            SELECT c.comment_id, c.comment, r.rate, c.user_id, u.username FROM product_comments c
+            INNER JOIN users u ON c.user_id = u.id
+            LEFT JOIN product_rating r ON c.user_id = r.user_id AND c.product_id = r.product_id
+            WHERE c.product_id = "${id}"
+        `
+    );
+
+    return comments[0];
+}
+
+export async function getRates(id) {
+    const rates = await db.query(`SELECT user_id, rate FROM product_rating WHERE product_id = "${id}"`);
+
+    return rates[0];
+}
+
+// для allProductsController
+export async function addAvgRatingAndCommentsToProducts(products) {
+    let filledProductsArr = products.map(async el => {
+        const avgRating = await getAvgRating(el.id);
+        const comments = await getCommentsWithRates(el.id);
+        el = { ...el, avgRating, comments };
+        return el;
+    });
+
+    filledProductsArr = await Promise.all(filledProductsArr).then(arr => arr);
+
+    return {
+        products: filledProductsArr
+    };
+}
