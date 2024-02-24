@@ -1,6 +1,53 @@
 import db from "../db.js";
 import { getAvgRating, getCommentsWithRates, getRates } from "./evaluation.js";
-// import { getCommentsWithRates } from "./evaluation.js";
+
+const url = "http://localhost:3001/images/";
+
+// FOR ADMIN
+export async function getStructureOfProductCategories() {
+    const feildsOfApplication = await db.query(`SELECT DISTINCT feildOfApplication FROM products`);
+
+    if (feildsOfApplication[0].length > 0) {
+        const categories = await db.query(
+            `SELECT category, feildOfApplication AS fromFeildOfApplication FROM products GROUP BY category, feildOfApplication`
+        );
+        const subcategories = await db.query(`SELECT subcategory, category AS fromCategory FROM products GROUP BY subcategory, category`);
+
+        return {
+            feildsOfApplication: feildsOfApplication[0],
+            categories: categories[0],
+            subcategories: subcategories[0]
+        };
+    }
+
+    return null;
+
+    // ИНАЯ СТРУКТУРА НЕУДОБНА ДЛЯ ОТРИСОВКИ НА ФРОНТЕ
+    // [
+    //     {
+    //         feildsOfApplication: "smart-home",
+    //         structure: [
+    //             {
+    //                 category: "kitchen appliance",
+    //                 subcategories: [subcategory: "kettle"]
+    //             }
+    //         ]
+    //     },
+    //     {
+    //         feildsOfApplication: "life-style",
+    //         structure: [
+    //             {
+    //                 category: "office",
+    //                 subcategories: [subcategory: "laptop", subcategory: "tablet"]
+    //             },
+    //             {
+    //                 category: "wearable",
+    //                 subcategories: [subcategory: "watch", subcategory: "headphones"]
+    //             },
+    //         ]
+    //     }
+    // ]
+}
 
 export async function getFeildOfApplicationCategories(feildOfApplication) {
     // определяем категории продуктов, относящиеся к указанной области применения
@@ -16,9 +63,14 @@ export async function getFeildOfApplicationCategories(feildOfApplication) {
 
         // запрашиваем продукты указанных категорий, на выходе - массивы промисов
         let products_list = categories[0].map(async el => {
-            const products = await db.query(`SELECT id, title, image, price FROM products WHERE category = "${el.category}" LIMIT 3`);
+            let products = await db.query(`SELECT id, title, image, price FROM products WHERE category = "${el.category}" LIMIT 3`);
+            // корректируем url изображения
+            products = products[0].map(el => {
+                el.image = url + el.image;
+                return el;
+            });
 
-            return products[0];
+            return products;
         });
 
         products_list = await Promise.all(products_list).then(list => list);
@@ -138,9 +190,9 @@ export async function getProductList(search, category, subcategory, minPrice, ma
     params.push((page - 1) * limit, limit);
 
     // без category в select выдает ошибку, так как атрибут исп. в фильтрах
-    const products = await db.query(
+    let products = await db.query(
         `
-            SELECT id, title, image, price, AVG(rate) AS rate, category, subcategory FROM products 
+            SELECT id, title, description, image, price, quantity, AVG(rate) AS rate, feildOfApplication, category, subcategory FROM products 
             LEFT JOIN product_rating ON products.id = product_rating.product_id
             GROUP BY id
             HAVING ${filters.join(" AND ")}
@@ -151,21 +203,18 @@ export async function getProductList(search, category, subcategory, minPrice, ma
     );
 
     // COUNT срабатывает неточно, приходится дублировать для получения общего кол-ва товаров
-    const productsQuantity = await db.query(
-        `
-            SELECT id, title, image, price, AVG(rate) AS rate, category, subcategory FROM products 
-            LEFT JOIN product_rating ON products.id = product_rating.product_id
-            GROUP BY id
-            HAVING ${filters.join(" AND ")}
-            ${order ? `ORDER BY price ${order === "asc" ? "asc" : "desc"}` : ""}
-        `,
-        params
-    );
+    const productsQuantity = await db.query(`SELECT * FROM products WHERE ${filters.join(" AND ")}`, params);
 
     if (products[0].length > 0) {
         // Корректна ли проверка? Возможна ли ошибка priceValues при пустом списке?
+
+        products = products[0].map(el => {
+            el.image = url + el.image;
+            return el;
+        });
+
         return {
-            products: products[0],
+            products,
             subcategories: subcategories,
             priceMin: priceValues[0][0].min,
             priceMax: priceValues[0][0].max,
@@ -177,15 +226,18 @@ export async function getProductList(search, category, subcategory, minPrice, ma
 }
 
 export async function getProduct(id) {
-    const data = await db.query(`SELECT * FROM products WHERE id = "${id}"`);
+    let data = await db.query(`SELECT * FROM products WHERE id = "${id}"`);
 
-    if (data[0][0]) {
+    if (data) {
         // товар с указанным id найден
+        data = data[0][0];
+        // коректируем путь к изображению
+        data.image = url + data.image;
 
         const avgRating = await getAvgRating(id);
         const comments = await getCommentsWithRates(id);
         const rates = await getRates(id);
-        const product = { ...data[0][0], avgRating, comments, rates };
+        const product = { ...data, avgRating, comments, rates };
 
         return {
             product

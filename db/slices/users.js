@@ -1,7 +1,8 @@
 import db from "../db.js";
 
 export async function getUser(email) {
-    const user = await db.query(`SELECT * FROM users WHERE email = "${email}"`); // без "" не работает
+    // не включаем email, чтобы не отображалось на front; password еще нужен для проверки
+    const user = await db.query(`SELECT id, username, password, status FROM users WHERE email = "${email}"`); // без "" не работает
     return user[0][0];
 }
 

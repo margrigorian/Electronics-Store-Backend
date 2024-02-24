@@ -22,51 +22,29 @@ export function validate(action) {
                 productId: z.preprocess(a => parseInt(String(a), 10), z.number().positive()) // проверка id из params
             }),
             postProduct: z.object({
-                title: z.string().min(2),
-                description: z.string().min(2),
-                feildOfApplication: z.union([z.literal("smart-home"), z.literal("life-style")]),
-                category: z.union([z.literal("kitchen appliance"), z.literal("office"), z.literal("wearable")]),
-                subcategory: z.union([
-                    // все ли описывается?
-                    z.literal("kettle"),
-                    z.literal("laptop"),
-                    z.literal("tablet"),
-                    z.literal("monitor"),
-                    z.literal("router"),
-                    z.literal("watch"),
-                    z.literal("headphones"),
-                    z.literal("other")
-                ]),
+                title: z.string().min(1),
+                description: z.string().min(1),
+                // feildOfApplication: z.union([z.literal("smart-home"), z.literal("life-style")]),
+                // нет четкой типизации, так как могут вноситься новые категории товаров
+                feildOfApplication: z.string().min(1),
+                category: z.string().min(1),
+                subcategory: z.string().min(1),
                 quantity: z.preprocess(a => parseInt(String(a), 10), z.number().nonnegative()), // допускается 0
                 price: z.preprocess(a => parseInt(String(a), 10), z.number().positive())
             }),
             putProduct: z.object({
                 id: z.preprocess(a => parseInt(String(a), 10), z.number().positive()),
-                title: z.union([z.string().min(2), z.literal(""), z.undefined()]),
-                description: z.union([z.string().min(2), z.literal(""), z.undefined()]),
-                feildOfApplication: z.union([z.literal("smart-home"), z.literal("life-style"), z.literal(""), z.undefined()]),
-                category: z.union([z.literal("kitchen appliance"), z.literal("office"), z.literal("wearable"), z.literal(""), z.undefined()]),
-                subcategory: z.union([
-                    z.literal("kettle"),
-                    z.literal("laptop"),
-                    z.literal("tablet"),
-                    z.literal("monitor"),
-                    z.literal("router"),
-                    z.literal("watch"),
-                    z.literal("headphones"),
-                    z.literal("other"),
-                    z.literal(""),
-                    z.undefined()
-                ]),
+                title: z.union([z.string().min(1), z.literal(""), z.undefined()]),
+                description: z.union([z.string().min(1), z.literal(""), z.undefined()]),
+                feildOfApplication: z.union([z.string().min(1), z.literal(""), z.undefined()]),
+                category: z.union([z.string().min(1), z.literal(""), z.undefined()]),
+                subcategory: z.union([z.string().min(1), z.literal(""), z.undefined()]),
                 quantity: z
                     .preprocess(a => (a === "" ? a : parseInt(String(a), 10)), z.union([z.number().nonnegative(), z.literal("")]))
                     .optional(z.undefined()),
                 price: z
                     .preprocess(a => (a === "" ? a : parseInt(String(a), 10)), z.union([z.number().positive(), z.literal("")]))
                     .optional(z.undefined())
-            }),
-            deleteProduct: z.object({
-                id: z.number().positive() // отправлено через req.body
             }),
             postComment: z.object({
                 productId: z.preprocess(a => parseInt(String(a), 10), z.number().positive()), // проверка id из params
@@ -91,6 +69,7 @@ export function validate(action) {
         }
 
         const validatedData = schemas[action].safeParse(req.body);
+
         if (validatedData.success) {
             next();
             return;

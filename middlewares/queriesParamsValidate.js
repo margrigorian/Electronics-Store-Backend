@@ -4,29 +4,10 @@ import getResponseTemplate from "../lib/responseTemplate.js";
 export function queriesParamsValidate(action) {
     return (req, res, next) => {
         const schemas = {
-            allProductsQueries: z.object({
-                page: z
-                    .preprocess(a => (a === "" ? a : parseInt(String(a), 10)), z.union([z.number().positive(), z.literal("")]))
-                    .optional(z.undefined()),
-                limit: z
-                    .preprocess(a => (a === "" ? a : parseInt(String(a), 10)), z.union([z.number().positive(), z.literal("")]))
-                    .optional(z.undefined())
-            }),
             productListQueries: z.object({
                 // .optional обрабатывает undefined, NaN - нет
-                category: z.union([z.literal("kitchen appliance"), z.literal("office"), z.literal("wearable"), z.literal(""), z.undefined()]),
-                subcategory: z.union([
-                    z.literal("kettle"),
-                    z.literal("laptop"),
-                    z.literal("tablet"),
-                    z.literal("monitor"),
-                    z.literal("router"),
-                    z.literal("watch"),
-                    z.literal("headphones"),
-                    z.literal("other"),
-                    z.literal(""),
-                    z.undefined()
-                ]),
+                category: z.string().optional(z.undefined()),
+                subcategory: z.string().optional(z.undefined()),
                 // допустила number, "", undefined; в случае NaN случится ошибка (например, при "text")
                 minPrice: z
                     .preprocess(a => (a === "" ? a : parseInt(String(a), 10)), z.union([z.number().positive(), z.literal("")]))
@@ -45,18 +26,7 @@ export function queriesParamsValidate(action) {
             }),
             searchQueries: z.object({
                 q: z.string().optional(z.undefined()),
-                subcategory: z.union([
-                    z.literal("kettle"),
-                    z.literal("laptop"),
-                    z.literal("tablet"),
-                    z.literal("monitor"),
-                    z.literal("router"),
-                    z.literal("watch"),
-                    z.literal("headphones"),
-                    z.literal("other"),
-                    z.literal(""),
-                    z.undefined()
-                ]),
+                subcategory: z.string().optional(z.undefined()),
                 // допустила number, "", undefined; в случае NaN случится ошибка (например, при "text")
                 minPrice: z
                     .preprocess(a => (a === "" ? a : parseInt(String(a), 10)), z.union([z.number().positive(), z.literal("")]))
@@ -74,6 +44,9 @@ export function queriesParamsValidate(action) {
             }),
             rateQuery: z.object({
                 rate: z.preprocess(a => parseInt(String(a), 10), z.union([z.number().min(1).max(5)])).optional(z.undefined())
+            }),
+            deletionQuery: z.object({
+                productId: z.preprocess(a => parseInt(String(a), 10), z.number().positive())
             })
         };
 

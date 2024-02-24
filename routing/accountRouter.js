@@ -11,10 +11,10 @@ import { productsPurchaseController } from "../controllers/productsPurchaseContr
 
 const router = express.Router();
 
-router.get("/admin", authenticate(true), queriesParamsValidate("allProductsQueries"), allProductsController);
+router.get("/admin", authenticate(true), queriesParamsValidate("searchQueries"), allProductsController);
 router.post("/admin", authenticate(true), upload.single("image"), validate("postProduct"), postProductController);
 router.put("/admin", authenticate(true), upload.single("image"), validate("putProduct"), putProductController);
-router.delete("/admin", authenticate(true), validate("deleteProduct"), deleteProductController);
+router.delete("/admin", authenticate(true), queriesParamsValidate("deletionQuery"), deleteProductController);
 router.post("/user", authenticate(), validate("productsPurchase"), productsPurchaseController);
 
 export default router;

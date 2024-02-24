@@ -44,7 +44,7 @@ export async function userLoginController(req, res) {
 
         if (user) {
             // авторизация прошла успешно, выдаем токен
-            const token = getToken(user.email);
+            const token = getToken(email);
             message = "Successful authorization! You can continue your session";
             response.data = {
                 message,

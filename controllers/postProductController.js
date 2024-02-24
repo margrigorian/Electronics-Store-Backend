@@ -4,7 +4,11 @@ import { checkProductExistence, postProduct } from "../db/slices/products.js";
 export async function postProductController(req, res) {
     try {
         const { title, description, feildOfApplication, category, subcategory, quantity, price } = req.body;
-        const image = req.file.path;
+        // пока есть проблемы с загрузкой изображения
+        let image = req.file?.path || "";
+        if (image) {
+            image = image.slice(7);
+        }
 
         const product = await checkProductExistence(title);
         const response = getResponseTemplate();

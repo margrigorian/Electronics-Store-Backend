@@ -1,18 +1,35 @@
 import getResponseTemplate from "../lib/responseTemplate.js";
-import { getProductList } from "../db/slices/products.js";
+import { getStructureOfProductCategories, getProductList } from "../db/slices/products.js";
 import { addAvgRatingAndCommentsToProducts } from "../db/slices/evaluation.js";
 
 export async function allProductsController(req, res) {
     try {
-        let { page, limit } = req.query;
+        let { q, subcategory, minPrice, maxPrice, order, page, limit } = req.query; // может быть "", undefined
+
+        minPrice ? (minPrice = +minPrice) : (minPrice = "");
+        maxPrice ? (maxPrice = +maxPrice) : (maxPrice = "");
         page ? (page = +page) : (page = 1);
         limit ? (limit = +limit) : (limit = 5);
+
         let data = "";
 
-        const productsList = await getProductList("", "", "", "", "", "", page, limit);
+        const structure = await getStructureOfProductCategories();
 
-        if (productsList) {
-            data = await addAvgRatingAndCommentsToProducts(productsList.products);
+        // значит список продуктов не пуст, раз есть структуры
+        if (structure) {
+            const productsList = await getProductList(q, "", subcategory, minPrice, maxPrice, order, page, limit);
+            // получаем productsList с доп. инфорамцией
+            // при search может быть null, поэтому необходима проверка
+            if (productsList) {
+                const productListWithAdditionalInfo = await addAvgRatingAndCommentsToProducts(productsList.products);
+                // заменяем изначальный productsList
+                productsList.products = productListWithAdditionalInfo.products;
+            }
+
+            data = {
+                structure,
+                ...productsList
+            };
         }
 
         const response = getResponseTemplate();

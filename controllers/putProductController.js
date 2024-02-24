@@ -4,9 +4,12 @@ import { updateProduct } from "../db/slices/products.js";
 export async function putProductController(req, res) {
     try {
         let { id, title, description, feildOfApplication, category, subcategory, quantity, price } = req.body;
-        let image;
 
-        req.file ? (image = req.file.path) : (image = "");
+        let image = req.file?.path || "";
+        if (image) {
+            image = image.slice(7);
+        }
+
         quantity ? (quantity = +quantity) : (quantity = "");
         price ? (price = +price) : (price = "");
 

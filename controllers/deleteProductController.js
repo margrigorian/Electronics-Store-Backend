@@ -3,10 +3,10 @@ import { deleteProduct } from "../db/slices/products.js";
 
 export async function deleteProductController(req, res) {
     try {
-        const { id } = req.body;
+        const { productId } = req.query;
         const response = getResponseTemplate();
 
-        const data = await deleteProduct(id);
+        const data = await deleteProduct(productId);
 
         if (data) {
             response.data = {
